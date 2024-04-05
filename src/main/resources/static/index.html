@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <title>Bootstrap Example</title>
     <meta charset="utf-8">
@@ -83,19 +83,23 @@
 <div class="container-fluid text-center">
     <div class="row content">
         <div class="col-sm-2 sidenav">
-<!--            <p><a href="#">Link</a></p>-->
-<!--            <p><a href="#">Link</a></p>-->
-<!--            <p><a href="#">Link</a></p>-->
+            <p><a href="#" hx-get="/protectedPage" hx-target="#home">Protected Page</a></p>
+            <p><a href="#" hx-get="/unProtectedPage" hx-target="#home">Un Protected Page</a></p>
+            <p><a href="#" hx-get="/protectedPage" hx-target="#home" hx-headers='{"Authorization": "Bearer js:getString()"}'>Protected Page using headers...</a></p>
+
+
         </div>
         <div class="col-sm-8 text-left">
             <div id="home" hx-trigger="load" hx-get="/publiccontent">
 
             </div>
+            <div th:text="${token}"></div>
+            <div th:text="${acc}"></div>
         </div>
         <div class="col-sm-2 sidenav">
             <div class="well">
                 <p>ADS</p>
-            </div>j
+            </div>
             <div class="well">
                 <p>ADS</p>
             </div>
@@ -105,7 +109,15 @@
 
 <footer class="container-fluid text-center">
     <p>Footer Text</p>
-</footer>
 
+
+
+</footer>
+    <script>
+        document.body.addEventListener('htmx:configRequest', function(evt) {
+            evt.detail.headers["Authorization"] = "Bearer " + accessToken;
+        });
+
+    </script>
 </body>
 </html>

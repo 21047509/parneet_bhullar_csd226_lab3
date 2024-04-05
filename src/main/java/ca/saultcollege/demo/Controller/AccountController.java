@@ -21,8 +21,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.http.HttpStatus;
 
+import java.util.ArrayList;
 import java.util.List;
-
+import java.util.Map;
 
 
 @RestController
@@ -173,7 +174,7 @@ public class AccountController {
                 "  <div id=\"login-error-msg-holder\">" +
                 "  </div>" +
                 "" +
-                "  <form id=\"login-form\" action='/auth/login' method='post'>" +
+                "  <form id=\"login-form\" hx-post=\"/auth/login\" hx-target=\"this\">" +
                 "    <input type=\"text\" name=\"username\" id=\"username-field\" class=\"login-form-field\" placeholder=\"Username\">" +
                 "    <input type=\"password\" name=\"password\" id=\"password-field\" class=\"login-form-field\" placeholder=\"Password\">" +
                 "    <input type=\"submit\" value=\"Login\" id=\"login-form-submit\">" +
@@ -309,10 +310,29 @@ public class AccountController {
 
             AuthResponse response = new AuthResponse(account.getEmail(), accessToken);
 
-            return ResponseEntity.ok().body(response);
+            return ResponseEntity.ok().body(response + "<script>alert('setting var \\\"accessToken\\\"');var accessToken='" + accessToken + "';</script>");
         } catch( Exception ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+    }
+
+
+    @GetMapping("/protectedPage")
+    public ResponseEntity<String> getProtectedPage(org.springframework.ui.Model model){ // map a URL to a method
+        String s="" +
+                "<h1>Protected page</h1>";
+        return ResponseEntity.ok(s);
+    }
+    @GetMapping("/unProtectedPage")
+    public ResponseEntity<String> getUnProtectedPage(@RequestHeader Map<String, String> headers) { // map a URL to a method
+
+        ArrayList<String> h=new ArrayList<>();
+        headers.forEach((key, value) -> {
+            h.add(String.format("Header '%s' = %s", key, value));
+        });
+        String s="" +
+                "<h1>Un Protected page</h1>";
+        return ResponseEntity.ok(s);
     }
 }
 
