@@ -13,7 +13,8 @@ import java.util.Date;
 
 @Component
 public class JwtTokenUtil {
-    private static final long EXPIRE_DURATION = 60 * 60 * 1000; // 1 hour
+    private static final long EXPIRE_DURATION = 60 * 1000; // 1 minute
+
 
     @Value("${app.jwt.secret}")
     private String SECRET_KEY;

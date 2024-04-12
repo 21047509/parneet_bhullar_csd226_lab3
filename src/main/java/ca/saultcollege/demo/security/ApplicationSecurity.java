@@ -25,7 +25,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-public class ApplicationSecurity {
+public class ApplicationSecurity   {
+
+
 
     @Autowired
     private JwtTokenFilter jwtTokenFilter;
@@ -74,6 +76,7 @@ public class ApplicationSecurity {
                         .requestMatchers(HttpMethod.GET, "/publiccontent").permitAll()
                         .requestMatchers(HttpMethod.POST, "/publiccontent").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/publiccontent").authenticated()
+                        .requestMatchers("/auth/refreshtoken").permitAll() // Permit access to /auth/refreshtoken without a valid access token
                         .anyRequest().authenticated()
                 )
                 .formLogin((form) -> form

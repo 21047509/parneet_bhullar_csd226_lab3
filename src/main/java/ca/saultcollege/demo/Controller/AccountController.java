@@ -1,10 +1,10 @@
 package ca.saultcollege.demo.Controller;
 
-import ca.saultcollege.demo.data.Account;
-import ca.saultcollege.demo.data.Registry;
+import ca.saultcollege.demo.data.*;
 import ca.saultcollege.demo.repositories.AccountRepository;
 import ca.saultcollege.demo.repositories.RegistryRepository;
 import ca.saultcollege.demo.security.JwtTokenUtil;
+import ca.saultcollege.demo.security.RefreshTokenUtil;
 import ch.qos.logback.core.model.Model;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.beans.factory.annotation.Autowired;
-import ca.saultcollege.demo.data.AuthRequest;
-import ca.saultcollege.demo.data.AuthResponse;
 import jakarta.validation.Valid;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -40,32 +38,42 @@ public class AccountController {
     @Autowired
     private AccountRepository accountRepository;
 
+    @Autowired
+    RefreshTokenUtil refreshTokenUtil;
+
+
+
+
+
+
+
+
 
 
 
 
     //    @PostMapping("/auth")
-    @PostMapping(value = "/auth/login_old")
-    public ResponseEntity<?> login(@RequestBody @Valid AuthRequest request) {
-        try {
-            Authentication authentication = authManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            request.getEmail(), request.getPassword())
-            );
-
-            Account account = new Account();
-            account.setId(1);
-            account.setEmail(authentication.getPrincipal().toString());
-
-            String accessToken = jwtUtil.generateAccessToken(account);
-
-            AuthResponse response = new AuthResponse(account.getEmail(), accessToken);
-
-            return ResponseEntity.ok().body(response);
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-    }
+//    @PostMapping(value = "/auth/login_old")
+//    public ResponseEntity<?> login(@RequestBody @Valid AuthRequest request) {
+//        try {
+//            Authentication authentication = authManager.authenticate(
+//                    new UsernamePasswordAuthenticationToken(
+//                            request.getEmail(), request.getPassword())
+//            );
+//
+//            Account account = new Account();
+//            account.setId(1);
+//            account.setEmail(authentication.getPrincipal().toString());
+//
+//            String accessToken = jwtUtil.generateAccessToken(account);
+//
+//            AuthResponse response = new AuthResponse(account.getEmail(), accessToken);
+//
+//            return ResponseEntity.ok().body(response);
+//        } catch (Exception ex) {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+//        }
+//    }
 
 
     //    @PostMapping("/signup")
@@ -307,8 +315,9 @@ public class AccountController {
 
             Account account = (Account) authentication.getPrincipal();
             String accessToken = jwtUtil.generateAccessToken(account);
+            RefreshToken refreshToken = refreshTokenUtil.createRefreshToken(account.getId());
 
-            AuthResponse response = new AuthResponse(account.getEmail(), accessToken);
+            AuthResponse response = new AuthResponse(account.getEmail(), accessToken,refreshToken.getToken());
 
             return ResponseEntity.ok().body(response + "<script>alert('setting var \\\"accessToken\\\"');var accessToken='" + accessToken + "';</script>");
         } catch( Exception ex) {
@@ -334,6 +343,30 @@ public class AccountController {
                 "<h1>Un Protected page</h1>";
         return ResponseEntity.ok(s);
     }
+
+    @PostMapping("/auth/refreshtoken")
+    public ResponseEntity<?> refreshtoken(@Valid @RequestBody TokenRefreshRequest request) {
+        String requestRefreshToken = request.getRefreshToken();
+
+        try {
+            RefreshToken refreshToken = refreshTokenUtil.findByToken(requestRefreshToken);
+
+            if (refreshToken != null) {
+                if (refreshTokenUtil.verifyExpiration(refreshToken)) {
+                    Account account = accountRepository.getById(refreshToken.getAccount().getId());
+                    String token = jwtUtil.generateAccessToken(account);
+                    return ResponseEntity.ok(new TokenRefreshResponse(token, requestRefreshToken));
+                } else {
+                    throw new Exception("RefreshTokenExpired");
+                }
+            }
+        } catch(Exception ex) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
 }
 
 

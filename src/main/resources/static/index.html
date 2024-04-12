@@ -112,11 +112,126 @@
 
 
 
+
 </footer>
+<!--<div id="refreshTokenResult"></div>-->
+
+<!--<script>-->
+<!--    function refreshToken() {-->
+<!--        const refreshToken = localStorage.getItem("refreshToken");-->
+
+<!--        if (refreshToken) {-->
+<!--            fetch("/auth/refreshtoken", {-->
+<!--                method: 'POST',-->
+<!--                headers: {-->
+<!--                    'Content-Type': 'application/json'-->
+<!--                },-->
+<!--                body: JSON.stringify({ refreshToken })-->
+<!--            })-->
+<!--                .then(response => {-->
+<!--                    if (!response.ok) {-->
+<!--                        throw new Error('Failed to refresh token');-->
+<!--                    }-->
+<!--                    return response.json();-->
+<!--                })-->
+<!--                .then(data => {-->
+<!--                    // Handle the response data as needed-->
+<!--                    document.getElementById("refreshTokenResult").innerText = JSON.stringify(data);-->
+<!--                })-->
+<!--                .catch(error => {-->
+<!--                    console.error('Error refreshing token:', error);-->
+<!--                });-->
+<!--        }-->
+<!--    }-->
+
+<!--    function saveRefreshToken(accessToken) {-->
+<!--        localStorage.setItem("refreshToken", accessToken);-->
+<!--    }-->
+
+<!--    function removeRefreshToken() {-->
+<!--        localStorage.removeItem("refreshToken");-->
+<!--    }-->
+
+<!--</script>-->
+<script>
+    // Define ApiService class
+    class ApiService {
+        constructor() {
+            this.refreshRetry = false;
+        }
+
+        async refreshToken() {
+            // Simulate token refresh
+            return { data: { accessToken: 'newAccessToken' } };
+        }
+
+        saveAccessToken(accessToken) {
+            this.refreshRetry = false;
+            localStorage.setItem("accessToken", accessToken);
+        }
+
+        saveRefreshToken(refreshToken) {
+            localStorage.setItem("refreshToken", refreshToken);
+        }
+
+        setupInterceptor() {
+            // Intercept response and handle 401 error
+            document.body.addEventListener('htmx:configRequest', async function(evt) {
+                const originalConfig = evt.detail.config;
+
+                if (originalConfig.response.status === 401 && !this.refreshRetry) {
+                    console.log("Attempting token refresh");
+                    this.refreshRetry = true;
+
+                    try {
+                        const response = await this.refreshToken();
+                        console.log("Token refresh response");
+                        console.log(response);
+                        this.saveAccessToken(response.data.accessToken);
+
+                        // Retry original request with new access token
+                        originalConfig.headers["Authorization"] = "Bearer " + response.data.accessToken;
+                        return htmx.ajax(originalConfig);
+                    } catch (error) {
+                        console.log("Error refreshing token:");
+                        console.error(error);
+                        return Promise.reject(error);
+                    }
+                }
+            });
+        }
+    }
+
+    // Create ApiService instance
+    const apiService = new ApiService();
+
+    // Call setupInterceptor to set up the interceptor
+    apiService.setupInterceptor();
+
+    // Update signIn method
+    function signIn() {
+        // Your signIn method implementation here
+        const response = {
+            data: {
+                accessToken: 'newAccessToken',
+                refreshToken: 'newRefreshToken'
+            }
+        };
+        apiService.saveAccessToken(response.data.accessToken);
+        apiService.saveRefreshToken(response.data.refreshToken);
+    }
+
+
+</script>
+
+
     <script>
+
+
         document.body.addEventListener('htmx:configRequest', function(evt) {
             evt.detail.headers["Authorization"] = "Bearer " + accessToken;
         });
+
 
     </script>
 </body>
