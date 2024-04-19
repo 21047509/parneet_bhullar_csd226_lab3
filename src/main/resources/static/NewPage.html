@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>New Page</title>
+    <script src="NewDataComponent.js"></script>
+    <script src="UpdateDataComponent.js"></script>
+</head>
+<body>
+<!-- Placeholder for displaying data from GET endpoint -->
+<div id="displayData"></div>
+
+<!-- Placeholder for sending data to PUT endpoint -->
+<div>
+    <label for="newDataInput">Enter new data:</label>
+    <input type="text" id="newDataInput">
+    <button onclick="updateData()">Update Data</button>
+</div>
+
+<!-- Button for navigation -->
+<button onclick="navigateToNewPage()">Go to New Page</button>
+
+<script>
+    // JavaScript function for navigation
+    function navigateToNewPage() {
+        window.location.href = 'NewPage.html';
+    }
+</script>
+</body>
+</html>
